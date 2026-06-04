@@ -369,11 +369,6 @@ watch(() => props.selected, focusSelected)
     >
       {{ status }}
     </div>
-    <div
-      class="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 px-3 py-1 rounded-full bg-elevated/80 backdrop-blur text-xs text-muted border border-default shadow-sm pointer-events-none"
-    >
-      Click a row or borough cluster · drag to pan · scroll to zoom · right-drag to rotate
-    </div>
   </div>
 </template>
 

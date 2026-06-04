@@ -222,12 +222,35 @@ const columns = [
   {
     accessorKey: 'parkingheld',
     header: 'Location',
-    cell: ({ row }: any) =>
-      h(
-        'span',
-        { class: 'block max-w-md truncate', title: row.original.parkingheld },
-        row.original.parkingheld
+    cell: ({ row }: any) => {
+      const address = row.original.parkingheld || ''
+      const query = encodeURIComponent(
+        [address, row.original.borough, 'New York, NY'].filter(Boolean).join(', ')
       )
+      const href = `https://www.google.com/maps/search/?api=1&query=${query}`
+      return h('div', { class: 'flex items-center gap-2 max-w-md' }, [
+        h('span', { class: 'truncate', title: address }, address),
+        h(
+          'a',
+          {
+            href,
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            title: 'Open in Google Maps',
+            'aria-label': 'Open in Google Maps',
+            class:
+              'shrink-0 inline-flex items-center justify-center w-6 h-6 rounded text-muted hover:text-primary hover:bg-primary/10 transition-colors',
+            onClick: (e: MouseEvent) => e.stopPropagation()
+          },
+          [
+            h(resolveComponent('UIcon'), {
+              name: 'i-lucide-external-link',
+              class: 'w-3.5 h-3.5'
+            })
+          ]
+        )
+      ])
+    }
   },
   {
     accessorKey: 'enteredon',
