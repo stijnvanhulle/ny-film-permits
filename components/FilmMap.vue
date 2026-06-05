@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import maplibregl, { Map as MLMap, Marker, Popup } from 'maplibre-gl'
-import { guessProduction } from '~/data/productions'
+import { guessProduction, imdbUrl } from '~/data/productions'
 
 type Permit = {
   eventid: string
@@ -30,6 +30,8 @@ const selectedMarker = shallowRef<Marker | null>(null)
 const selectedPopup = shallowRef<Popup | null>(null)
 const status = ref<string>('')
 const mapReady = ref(false)
+
+const { productions } = useProductions()
 
 const BOROUGH_CENTERS: Record<string, [number, number]> = {
   Manhattan: [-73.9712, 40.7831],
@@ -187,9 +189,9 @@ const focusSelected = async () => {
   const fmt = (s: string) =>
     s ? new Date(s).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''
   const dateLine = [fmt(sel.startdatetime), fmt(sel.enddatetime)].filter(Boolean).join(' → ')
-  const production = guessProduction(sel)
+  const production = guessProduction(sel, productions.value)
   const productionHtml = production
-    ? `<div style="font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><span style="opacity:0.6">Production:</span><span style="font-weight:600">${escapeHtml(production.title)}</span><span style="font-size:10px;opacity:0.6;text-transform:uppercase;letter-spacing:0.04em">${production.confidence}</span></div>`
+    ? `<div style="font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="opacity:0.6">Production:</span><span style="font-weight:600">${escapeHtml(production.title)}</span><span style="font-size:10px;opacity:0.6;text-transform:uppercase;letter-spacing:0.04em">${production.confidence}</span><a href="${escapeHtml(imdbUrl(production))}" target="_blank" rel="noopener noreferrer" style="font-size:10px;font-weight:700;letter-spacing:0.04em;padding:1px 5px;border-radius:3px;background:rgba(251,191,36,0.18);color:#fcd34d;text-decoration:none">IMDb</a></div>`
     : ''
   const displayAddress = formatAddress(sel.parkingheld)
   const mapsQuery = encodeURIComponent(
@@ -376,6 +378,9 @@ onBeforeUnmount(() => {
 
 watch(() => props.permits, drawBoroughMarkers, { deep: false })
 watch(() => props.selected, focusSelected)
+watch(productions, () => {
+  if (props.selected) focusSelected()
+})
 </script>
 
 <template>
