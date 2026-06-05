@@ -184,18 +184,20 @@ const focusSelected = async () => {
   status.value = ''
   const color = CATEGORY_COLOR[sel.category] ?? '#0ea5e9'
 
-  const fmt = (s: string) => (s ? new Date(s).toLocaleString() : '')
+  const fmt = (s: string) =>
+    s ? new Date(s).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''
   const dateLine = [fmt(sel.startdatetime), fmt(sel.enddatetime)].filter(Boolean).join(' → ')
   const production = guessProduction(sel)
   const productionHtml = production
     ? `<div style="font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><span style="opacity:0.6">Production:</span><span style="font-weight:600">${escapeHtml(production.title)}</span><span style="font-size:10px;opacity:0.6;text-transform:uppercase;letter-spacing:0.04em">${production.confidence}</span></div>`
     : ''
+  const displayAddress = formatAddress(sel.parkingheld)
   const mapsQuery = encodeURIComponent(
-    [sel.parkingheld, sel.borough, 'New York, NY'].filter(Boolean).join(', ')
+    [displayAddress || sel.parkingheld, sel.borough, 'New York, NY'].filter(Boolean).join(', ')
   )
   const mapsHref = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`
-  const locationHtml = sel.parkingheld
-    ? `<a href="${mapsHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;color:#7dd3fc;text-decoration:none"><span style="text-decoration:underline">${escapeHtml(sel.parkingheld)}</span><span aria-hidden="true">↗</span></a>`
+  const locationHtml = displayAddress
+    ? `<a href="${mapsHref}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(sel.parkingheld)}" style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;color:#7dd3fc;text-decoration:none"><span style="text-decoration:underline">${escapeHtml(displayAddress)}</span><span aria-hidden="true">↗</span></a>`
     : ''
   const html = `
     <div style="min-width:220px;font-family:ui-sans-serif,system-ui">
