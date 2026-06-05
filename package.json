@@ -16,5 +16,10 @@
     "nuxt": "^4.4.7",
     "vue": "^3.5.35",
     "vue-router": "^5.1.0"
+  },
+  "packageManager": "pnpm@11.5.0",
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=11.0.0"
   }
 }
