@@ -186,7 +186,6 @@ const focusSelected = async () => {
     <div style="min-width:220px;font-family:ui-sans-serif,system-ui">
       <div style="display:inline-block;padding:2px 8px;border-radius:9999px;background:${color}22;color:${color};font-size:11px;font-weight:600;margin-bottom:6px">${sel.category}</div>
       <div style="font-weight:600;margin-bottom:4px">${sel.subcategoryname || '—'}</div>
-      <div style="font-size:12px;opacity:0.8;margin-bottom:6px;line-height:1.4">${sel.parkingheld}</div>
       <div style="font-size:11px;opacity:0.6">${dateLine}</div>
     </div>
   `
