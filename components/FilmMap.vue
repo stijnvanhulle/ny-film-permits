@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import maplibregl, { Map as MLMap, Marker, Popup } from 'maplibre-gl'
+import { guessProduction } from '~/data/productions'
 
 type Permit = {
   eventid: string
@@ -11,6 +12,9 @@ type Permit = {
   startdatetime: string
   enddatetime: string
 }
+
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 const props = defineProps<{
   permits: Permit[]
@@ -182,11 +186,24 @@ const focusSelected = async () => {
 
   const fmt = (s: string) => (s ? new Date(s).toLocaleString() : '')
   const dateLine = [fmt(sel.startdatetime), fmt(sel.enddatetime)].filter(Boolean).join(' → ')
+  const production = guessProduction(sel)
+  const productionHtml = production
+    ? `<div style="font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><span style="opacity:0.6">Production:</span><span style="font-weight:600">${escapeHtml(production.title)}</span><span style="font-size:10px;opacity:0.6;text-transform:uppercase;letter-spacing:0.04em">${production.confidence}</span></div>`
+    : ''
+  const mapsQuery = encodeURIComponent(
+    [sel.parkingheld, sel.borough, 'New York, NY'].filter(Boolean).join(', ')
+  )
+  const mapsHref = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`
+  const locationHtml = sel.parkingheld
+    ? `<a href="${mapsHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;color:#7dd3fc;text-decoration:none"><span style="text-decoration:underline">${escapeHtml(sel.parkingheld)}</span><span aria-hidden="true">↗</span></a>`
+    : ''
   const html = `
     <div style="min-width:220px;font-family:ui-sans-serif,system-ui">
-      <div style="display:inline-block;padding:2px 8px;border-radius:9999px;background:${color}22;color:${color};font-size:11px;font-weight:600;margin-bottom:6px">${sel.category}</div>
-      <div style="font-weight:600;margin-bottom:4px">${sel.subcategoryname || '—'}</div>
-      <div style="font-size:11px;opacity:0.6">${dateLine}</div>
+      <div style="display:inline-block;padding:2px 8px;border-radius:9999px;background:${color}22;color:${color};font-size:11px;font-weight:600;margin-bottom:6px">${escapeHtml(sel.category)}</div>
+      <div style="font-weight:600;margin-bottom:4px">${escapeHtml(sel.subcategoryname || '—')}</div>
+      ${productionHtml}
+      <div style="font-size:11px;opacity:0.6">${escapeHtml(dateLine)}</div>
+      ${locationHtml}
     </div>
   `
 
