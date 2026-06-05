@@ -2,6 +2,7 @@
 import { h, onBeforeUnmount, onMounted, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import FilmMap from '~/components/FilmMap.vue'
+import { guessProduction } from '~/data/productions'
 
 type Permit = {
   eventid: string
@@ -240,6 +241,32 @@ const columns: TableColumn<Permit>[] = [
     accessorKey: 'subcategoryname',
     header: sortHeader('Subcategory'),
     cell: ({ row }: any) => h('span', {}, row.original.subcategoryname || '—')
+  },
+  {
+    id: 'production',
+    accessorFn: (row: Permit) => guessProduction(row)?.title ?? '',
+    header: sortHeader('Production'),
+    cell: ({ row }: any) => {
+      const guess = guessProduction(row.original)
+      if (!guess) return h('span', { class: 'text-muted' }, '—')
+      const color =
+        guess.confidence === 'high'
+          ? 'success'
+          : guess.confidence === 'medium'
+            ? 'warning'
+            : 'neutral'
+      const title = guess.alternates.length
+        ? `Best guess. Also possible: ${guess.alternates.join(', ')}`
+        : `Best guess (${guess.confidence} confidence)`
+      return h('div', { class: 'flex items-center gap-2', title }, [
+        h('span', { class: 'truncate max-w-[200px]' }, guess.title),
+        h(
+          UBadge,
+          { variant: 'subtle', color, size: 'xs' },
+          () => guess.confidence
+        )
+      ])
+    }
   },
   {
     accessorKey: 'borough',
