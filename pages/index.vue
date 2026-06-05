@@ -66,10 +66,13 @@ const params = computed(() => {
   // not just those whose start falls inside it.
   if (startDate.value) where.push(`enddatetime >= '${startDate.value}T00:00:00.000'`)
   if (endDate.value) where.push(`startdatetime <= '${endDate.value}T23:59:59.999'`)
+  // When a date window is active, long-range permits entered months ago would be
+  // pushed past the row cap by more-recently-entered shorter permits. Switch the
+  // sort to startdatetime so all window-overlapping permits surface.
+  const hasDateFilter = !!(startDate.value || endDate.value)
   const qs = new URLSearchParams({
-    $limit: '200',
-    // Sort by when the permit was entered into the system so newest entries surface first
-    $order: 'enteredon DESC'
+    $limit: hasDateFilter ? '1000' : '200',
+    $order: hasDateFilter ? 'startdatetime ASC' : 'enteredon DESC'
   })
   if (where.length) qs.set('$where', where.join(' AND '))
   return qs.toString()
@@ -284,13 +287,14 @@ const columns: TableColumn<Permit>[] = [
     accessorKey: 'parkingheld',
     header: sortHeader('Location'),
     cell: ({ row }: any) => {
-      const address = row.original.parkingheld || ''
+      const raw = row.original.parkingheld || ''
+      const address = formatAddress(raw)
       const query = encodeURIComponent(
-        [address, row.original.borough, 'New York, NY'].filter(Boolean).join(', ')
+        [address || raw, row.original.borough, 'New York, NY'].filter(Boolean).join(', ')
       )
       const href = `https://www.google.com/maps/search/?api=1&query=${query}`
       return h('div', { class: 'flex items-center gap-2 max-w-md' }, [
-        h('span', { class: 'truncate', title: address }, address),
+        h('span', { class: 'truncate', title: raw }, address || '—'),
         h(
           'a',
           {
