@@ -1,0 +1,9 @@
+[phases.setup]
+# Drop nix pnpm so corepack owns the pnpm version from package.json (pnpm@11.5.0).
+nixPkgs = ["git", "nodejs_22", "pnpm", "python3", "gcc", "gnumake"]
+
+[phases.install]
+cmds = [
+  "pnpm install --frozen-lockfile",
+]
+dependsOn = ["setup"]
