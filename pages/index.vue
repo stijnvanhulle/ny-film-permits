@@ -62,7 +62,9 @@ const params = computed(() => {
   if (category.value) where.push(`category='${category.value}'`)
   if (search.value)
     where.push(`upper(parkingheld) like upper('%${search.value.replace(/'/g, "''")}%')`)
-  if (startDate.value) where.push(`startdatetime >= '${startDate.value}T00:00:00.000'`)
+  // Range overlap: include permits that are active at any point in the selected window,
+  // not just those whose start falls inside it.
+  if (startDate.value) where.push(`enddatetime >= '${startDate.value}T00:00:00.000'`)
   if (endDate.value) where.push(`startdatetime <= '${endDate.value}T23:59:59.999'`)
   const qs = new URLSearchParams({
     $limit: '200',
