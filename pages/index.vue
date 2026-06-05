@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { h, onBeforeUnmount, onMounted, resolveComponent } from 'vue'
+import type { TableColumn } from '@nuxt/ui'
 import FilmMap from '~/components/FilmMap.vue'
 
 type Permit = {
@@ -20,11 +21,17 @@ type Permit = {
 }
 
 const UBadge = resolveComponent('UBadge')
+const UButton = resolveComponent('UButton')
 
 const search = ref('')
 const borough = ref<string | undefined>()
 const category = ref<string | undefined>()
+const startDate = ref('')
+const endDate = ref('')
 const selected = ref<Permit | null>(null)
+const sorting = ref<{ id: string; desc: boolean }[]>([
+  { id: 'enteredon', desc: true }
+])
 
 const boroughs = ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island']
 const categories = [
@@ -54,6 +61,8 @@ const params = computed(() => {
   if (category.value) where.push(`category='${category.value}'`)
   if (search.value)
     where.push(`upper(parkingheld) like upper('%${search.value.replace(/'/g, "''")}%')`)
+  if (startDate.value) where.push(`startdatetime >= '${startDate.value}T00:00:00.000'`)
+  if (endDate.value) where.push(`startdatetime <= '${endDate.value}T23:59:59.999'`)
   const qs = new URLSearchParams({
     $limit: '200',
     // Sort by when the permit was entered into the system so newest entries surface first
@@ -107,7 +116,7 @@ watch(
 )
 
 // Reset the seen-set when filters change so we don't flash old rows that just re-entered the page
-watch([search, borough, category], () => {
+watch([search, borough, category, startDate, endDate], () => {
   seenIds.value.clear()
   recentlyAddedIds.value.clear()
   newCount.value = 0
@@ -177,10 +186,33 @@ const boroughColor = (
   return map[b] ?? 'neutral'
 }
 
-const columns = [
+const sortHeader = (label: string) => ({ column }: any) => {
+  const sorted = column.getIsSorted()
+  const icon =
+    sorted === 'asc'
+      ? 'i-lucide-arrow-up'
+      : sorted === 'desc'
+        ? 'i-lucide-arrow-down'
+        : 'i-lucide-arrow-up-down'
+  return h(
+    UButton,
+    {
+      color: 'neutral',
+      variant: 'ghost',
+      size: 'xs',
+      label,
+      icon,
+      trailing: true,
+      class: '-mx-2',
+      onClick: () => column.toggleSorting(sorted === 'asc')
+    }
+  )
+}
+
+const columns: TableColumn<Permit>[] = [
   {
     accessorKey: 'eventid',
-    header: 'ID',
+    header: sortHeader('ID'),
     cell: ({ row }: any) => {
       const isNew = recentlyAddedIds.value.has(row.original.eventid)
       return h('span', { class: 'inline-flex items-center gap-2' }, [
@@ -200,18 +232,18 @@ const columns = [
   },
   {
     accessorKey: 'category',
-    header: 'Category',
+    header: sortHeader('Category'),
     cell: ({ row }: any) =>
       h(UBadge, { variant: 'subtle', color: 'neutral' }, () => row.original.category || '—')
   },
   {
     accessorKey: 'subcategoryname',
-    header: 'Subcategory',
+    header: sortHeader('Subcategory'),
     cell: ({ row }: any) => h('span', {}, row.original.subcategoryname || '—')
   },
   {
     accessorKey: 'borough',
-    header: 'Borough',
+    header: sortHeader('Borough'),
     cell: ({ row }: any) =>
       h(
         UBadge,
@@ -221,7 +253,7 @@ const columns = [
   },
   {
     accessorKey: 'parkingheld',
-    header: 'Location',
+    header: sortHeader('Location'),
     cell: ({ row }: any) => {
       const address = row.original.parkingheld || ''
       const query = encodeURIComponent(
@@ -254,7 +286,7 @@ const columns = [
   },
   {
     accessorKey: 'enteredon',
-    header: 'Entered',
+    header: sortHeader('Entered'),
     cell: ({ row }: any) =>
       h(
         'span',
@@ -264,13 +296,13 @@ const columns = [
   },
   {
     accessorKey: 'startdatetime',
-    header: 'Start',
+    header: sortHeader('Start'),
     cell: ({ row }: any) =>
       h('span', { class: 'text-sm whitespace-nowrap' }, formatDate(row.original.startdatetime))
   },
   {
     accessorKey: 'enddatetime',
-    header: 'End',
+    header: sortHeader('End'),
     cell: ({ row }: any) =>
       h('span', { class: 'text-sm whitespace-nowrap' }, formatDate(row.original.enddatetime))
   }
@@ -284,6 +316,40 @@ const rowClass = (row: any) =>
   recentlyAddedIds.value.has(row.original.eventid)
     ? 'bg-primary/5 ring-1 ring-inset ring-primary/30 transition-colors duration-700'
     : ''
+
+// Resizable split between map and table
+const mapHeight = ref(360)
+const isDragging = ref(false)
+const MIN_MAP = 160
+const MIN_TABLE_AREA = 240
+
+const onResizeStart = (e: PointerEvent) => {
+  e.preventDefault()
+  isDragging.value = true
+  const target = e.target as HTMLElement
+  target.setPointerCapture(e.pointerId)
+  document.body.style.cursor = 'row-resize'
+  document.body.style.userSelect = 'none'
+}
+const onResizeMove = (e: PointerEvent) => {
+  if (!isDragging.value) return
+  const headerOffset = 65 // approx header height
+  const next = e.clientY - headerOffset
+  const max = window.innerHeight - headerOffset - MIN_TABLE_AREA
+  mapHeight.value = Math.max(MIN_MAP, Math.min(max, next))
+}
+const onResizeEnd = (e: PointerEvent) => {
+  if (!isDragging.value) return
+  isDragging.value = false
+  const target = e.target as HTMLElement
+  if (target.hasPointerCapture?.(e.pointerId)) target.releasePointerCapture(e.pointerId)
+  document.body.style.cursor = ''
+  document.body.style.userSelect = ''
+}
+
+onMounted(() => {
+  mapHeight.value = Math.max(MIN_MAP, Math.round(window.innerHeight * 0.4))
+})
 </script>
 
 <template>
@@ -329,7 +395,10 @@ const rowClass = (row: any) =>
       </div>
     </header>
 
-    <div class="h-[40vh] min-h-[280px] border-b border-default relative">
+    <div
+      class="border-b border-default relative shrink-0"
+      :style="{ height: mapHeight + 'px' }"
+    >
       <FilmMap
         :selected="selected"
         :permits="data ?? []"
@@ -337,7 +406,24 @@ const rowClass = (row: any) =>
       />
     </div>
 
-    <div class="px-6 py-3 flex flex-wrap gap-3 items-center border-b border-default">
+    <div
+      class="h-1.5 cursor-row-resize bg-default hover:bg-primary/40 transition-colors relative group shrink-0"
+      :class="{ 'bg-primary/50': isDragging }"
+      role="separator"
+      aria-orientation="horizontal"
+      aria-label="Resize map and table"
+      @pointerdown="onResizeStart"
+      @pointermove="onResizeMove"
+      @pointerup="onResizeEnd"
+      @pointercancel="onResizeEnd"
+    >
+      <div
+        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-1 rounded-full bg-muted/40 group-hover:bg-primary/60 transition-colors"
+        :class="{ 'bg-primary': isDragging }"
+      />
+    </div>
+
+    <div class="px-6 py-3 flex flex-wrap gap-3 items-center border-b border-default shrink-0">
       <UInput
         v-model="search"
         placeholder="Search location…"
@@ -346,12 +432,17 @@ const rowClass = (row: any) =>
       />
       <USelect v-model="borough" :items="boroughs" placeholder="All boroughs" class="w-44" />
       <USelect v-model="category" :items="categories" placeholder="All categories" class="w-48" />
+      <div class="flex items-center gap-2">
+        <UInput v-model="startDate" type="date" class="w-40" :ui="{ base: 'cursor-pointer' }" />
+        <span class="text-xs text-muted">to</span>
+        <UInput v-model="endDate" type="date" class="w-40" :ui="{ base: 'cursor-pointer' }" />
+      </div>
       <UButton
-        v-if="borough || category || search"
+        v-if="borough || category || search || startDate || endDate"
         variant="ghost"
         color="neutral"
         icon="i-lucide-x"
-        @click="() => { borough = undefined; category = undefined; search = '' }"
+        @click="() => { borough = undefined; category = undefined; search = ''; startDate = ''; endDate = '' }"
       >
         Clear
       </UButton>
@@ -368,6 +459,7 @@ const rowClass = (row: any) =>
       />
       <UTable
         v-else
+        v-model:sorting="sorting"
         :data="data ?? []"
         :columns="columns"
         :loading="pending"
