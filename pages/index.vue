@@ -177,7 +177,7 @@ const updatedAgo = computed(() => {
 })
 
 const formatDate = (s: string) =>
-  s ? new Date(s).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : ''
+  s ? new Date(s).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''
 
 const boroughColor = (
   b: string

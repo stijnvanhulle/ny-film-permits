@@ -184,7 +184,8 @@ const focusSelected = async () => {
   status.value = ''
   const color = CATEGORY_COLOR[sel.category] ?? '#0ea5e9'
 
-  const fmt = (s: string) => (s ? new Date(s).toLocaleString() : '')
+  const fmt = (s: string) =>
+    s ? new Date(s).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''
   const dateLine = [fmt(sel.startdatetime), fmt(sel.enddatetime)].filter(Boolean).join(' → ')
   const production = guessProduction(sel)
   const productionHtml = production
