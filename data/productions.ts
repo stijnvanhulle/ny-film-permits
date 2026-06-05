@@ -109,6 +109,166 @@ export const knownProductions: KnownProduction[] = [
     window: { from: '2025-08-01', to: '2026-05-31' },
     categories: ['Television'],
     subcategories: ['Episodic series', 'Cable']
+  },
+  {
+    title: 'Power Book III: Raising Kanan',
+    type: 'series',
+    boroughs: ['Queens', 'Bronx', 'Brooklyn'],
+    window: { from: '2025-08-01', to: '2026-05-31' },
+    categories: ['Television'],
+    subcategories: ['Episodic series', 'Cable']
+  },
+  {
+    title: 'The Penguin',
+    type: 'series',
+    boroughs: ['Brooklyn', 'Queens', 'Manhattan'],
+    window: { from: '2025-10-01', to: '2026-08-31' },
+    categories: ['Television'],
+    subcategories: ['Episodic series', 'Cable']
+  },
+  {
+    title: 'Pretty Little Liars: Summer School',
+    type: 'series',
+    boroughs: ['Brooklyn', 'Manhattan'],
+    window: { from: '2025-08-01', to: '2026-03-31' },
+    categories: ['Television'],
+    subcategories: ['Episodic series', 'Cable']
+  },
+  {
+    title: 'Saturday Night Live',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-09-01', to: '2026-05-31' },
+    categories: ['Television'],
+    subcategories: ['Variety', 'Live Show']
+  },
+  {
+    title: 'The Tonight Show Starring Jimmy Fallon',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['Talk Show', 'Variety']
+  },
+  {
+    title: 'Late Show with Stephen Colbert',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['Talk Show']
+  },
+  {
+    title: 'Late Night with Seth Meyers',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['Talk Show']
+  },
+  {
+    title: 'The Daily Show',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['Talk Show']
+  },
+  {
+    title: 'Last Week Tonight with John Oliver',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-02-01', to: '2026-11-30' },
+    categories: ['Television'],
+    subcategories: ['Talk Show', 'Cable']
+  },
+  {
+    title: 'The View',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['Talk Show']
+  },
+  {
+    title: 'Good Morning America',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['News']
+  },
+  {
+    title: 'Today',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['News']
+  },
+  {
+    title: 'CBS Mornings',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-01-01', to: '2026-12-31' },
+    categories: ['Television'],
+    subcategories: ['News']
+  },
+  {
+    title: 'The Real Housewives of New York City',
+    type: 'series',
+    boroughs: ['Manhattan', 'Brooklyn'],
+    window: { from: '2025-06-01', to: '2026-06-30' },
+    categories: ['Television'],
+    subcategories: ['Reality', 'Cable']
+  },
+  {
+    title: 'Project Runway',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-08-01', to: '2026-04-30' },
+    categories: ['Television'],
+    subcategories: ['Reality', 'Cable']
+  },
+  {
+    title: 'Top Chef',
+    type: 'series',
+    boroughs: ['Manhattan', 'Brooklyn'],
+    window: { from: '2025-08-01', to: '2026-04-30' },
+    categories: ['Television'],
+    subcategories: ['Reality', 'Cable']
+  },
+  {
+    title: 'Sesame Street',
+    type: 'series',
+    boroughs: ['Queens'],
+    window: { from: '2025-07-01', to: '2026-05-31' },
+    categories: ['Television'],
+    subcategories: ['Episodic series', 'Cable']
+  },
+  {
+    title: 'Brilliant Minds',
+    type: 'series',
+    boroughs: ['Manhattan', 'Brooklyn'],
+    window: { from: '2025-07-01', to: '2026-04-30' },
+    categories: ['Television'],
+    subcategories: ['Episodic series']
+  },
+  {
+    title: 'High Potential (NY block)',
+    type: 'series',
+    boroughs: ['Manhattan'],
+    window: { from: '2025-08-01', to: '2026-04-30' },
+    categories: ['Television'],
+    subcategories: ['Episodic series']
+  },
+  {
+    title: 'Watson',
+    type: 'series',
+    boroughs: ['Manhattan', 'Brooklyn'],
+    window: { from: '2025-08-01', to: '2026-04-30' },
+    categories: ['Television'],
+    subcategories: ['Episodic series']
   }
 ]
 
