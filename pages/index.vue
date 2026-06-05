@@ -2,7 +2,7 @@
 import { h, onBeforeUnmount, onMounted, resolveComponent } from 'vue'
 import type { TableColumn } from '@nuxt/ui'
 import FilmMap from '~/components/FilmMap.vue'
-import { guessProduction } from '~/data/productions'
+import { guessProduction, imdbUrl } from '~/data/productions'
 
 type Permit = {
   eventid: string
@@ -66,13 +66,13 @@ const params = computed(() => {
   // not just those whose start falls inside it.
   if (startDate.value) where.push(`enddatetime >= '${startDate.value}T00:00:00.000'`)
   if (endDate.value) where.push(`startdatetime <= '${endDate.value}T23:59:59.999'`)
-  // When a date window is active, long-range permits entered months ago would be
-  // pushed past the row cap by more-recently-entered shorter permits. Switch the
-  // sort to startdatetime so all window-overlapping permits surface.
+  // When a date window is active, long-range permits entered months ago can be
+  // pushed past the row cap by more-recently-entered shorter ones. Bump the limit
+  // generously so the overlap WHERE clause isn't undercut by truncation.
   const hasDateFilter = !!(startDate.value || endDate.value)
   const qs = new URLSearchParams({
-    $limit: hasDateFilter ? '1000' : '200',
-    $order: hasDateFilter ? 'startdatetime ASC' : 'enteredon DESC'
+    $limit: hasDateFilter ? '5000' : '200',
+    $order: 'enteredon DESC'
   })
   if (where.length) qs.set('$where', where.join(' AND '))
   return qs.toString()
@@ -156,10 +156,13 @@ const onVis = () => {
 // Clock for "updated Xs ago"
 let clockHandle: number | null = null
 
+const { productions, load: loadProductions } = useProductions()
+
 onMounted(() => {
   document.addEventListener('visibilitychange', onVis)
   startPolling()
   clockHandle = window.setInterval(() => (now.value = Date.now()), 1000)
+  loadProductions()
 })
 
 onBeforeUnmount(() => {
@@ -249,10 +252,10 @@ const columns: TableColumn<Permit>[] = [
   },
   {
     id: 'production',
-    accessorFn: (row: Permit) => guessProduction(row)?.title ?? '',
+    accessorFn: (row: Permit) => guessProduction(row, productions.value)?.title ?? '',
     header: sortHeader('Production'),
     cell: ({ row }: any) => {
-      const guess = guessProduction(row.original)
+      const guess = guessProduction(row.original, productions.value)
       if (!guess) return h('span', { class: 'text-muted' }, '—')
       const color =
         guess.confidence === 'high'
@@ -269,6 +272,20 @@ const columns: TableColumn<Permit>[] = [
           UBadge,
           { variant: 'subtle', color, size: 'xs' },
           () => guess.confidence
+        ),
+        h(
+          'a',
+          {
+            href: imdbUrl(guess),
+            target: '_blank',
+            rel: 'noopener noreferrer',
+            title: guess.imdbId ? 'Open on IMDb' : 'Search on IMDb',
+            'aria-label': 'Open on IMDb',
+            class:
+              'shrink-0 inline-flex items-center justify-center px-1.5 h-5 rounded text-[10px] font-bold tracking-wide bg-amber-400/20 text-amber-300 hover:bg-amber-400/30 transition-colors',
+            onClick: (e: MouseEvent) => e.stopPropagation()
+          },
+          'IMDb'
         )
       ])
     }

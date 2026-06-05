@@ -1,355 +1,84 @@
-// Curated list of productions known to shoot in NYC.
-// Used to guess which production a permit belongs to by matching
-// borough + category + subcategory + date window.
-//
-// Add or update entries as productions start / wrap. Date windows
-// can be loose — the matcher just checks whether the permit's
-// startdatetime falls within [from, to].
+// Production matcher. The list of candidate productions is fetched live
+// from TVMaze (see composables/useProductions.ts) so there's nothing to
+// maintain in the codebase — guessProduction is a pure function over the
+// passed-in list.
 
 export type ProductionType = 'movie' | 'series'
 
-export type KnownProduction = {
+export type Production = {
   title: string
   type: ProductionType
-  /** Boroughs the production is known to film in. Empty = any. */
-  boroughs: string[]
-  /** Inclusive ISO date window during which permits should be attributed. */
-  window: { from: string; to: string }
-  /** Permit categories that match. Empty = any. */
-  categories: string[]
-  /** Optional subcategory hints (case-insensitive substring match). */
-  subcategories?: string[]
+  imdbId: string | null
+  premiered: string | null
+  subcategories: string[]
+  /** True when the show's name/summary mentions NYC — used as a borough proxy. */
+  nycAnchored: boolean
+  network: string | null
 }
-
-export const knownProductions: KnownProduction[] = [
-  {
-    title: 'Law & Order: SVU',
-    type: 'series',
-    boroughs: ['Manhattan', 'Queens'],
-    window: { from: '2025-07-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'Law & Order',
-    type: 'series',
-    boroughs: ['Manhattan', 'Queens'],
-    window: { from: '2025-07-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'Law & Order: Organized Crime',
-    type: 'series',
-    boroughs: ['Manhattan', 'Brooklyn', 'Queens'],
-    window: { from: '2025-07-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'FBI',
-    type: 'series',
-    boroughs: ['Brooklyn', 'Manhattan'],
-    window: { from: '2025-07-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'FBI: Most Wanted',
-    type: 'series',
-    boroughs: ['Brooklyn', 'Manhattan'],
-    window: { from: '2025-07-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'And Just Like That…',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-09-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'Only Murders in the Building',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2026-01-01', to: '2026-08-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'The Gilded Age',
-    type: 'series',
-    boroughs: ['Manhattan', 'Brooklyn'],
-    window: { from: '2025-08-01', to: '2026-03-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'Elsbeth',
-    type: 'series',
-    boroughs: ['Manhattan', 'Brooklyn'],
-    window: { from: '2025-07-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'The Equalizer',
-    type: 'series',
-    boroughs: ['Brooklyn', 'Manhattan'],
-    window: { from: '2025-07-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'Power Book II: Ghost',
-    type: 'series',
-    boroughs: ['Brooklyn', 'Queens', 'Bronx'],
-    window: { from: '2025-08-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'Power Book III: Raising Kanan',
-    type: 'series',
-    boroughs: ['Queens', 'Bronx', 'Brooklyn'],
-    window: { from: '2025-08-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'The Penguin',
-    type: 'series',
-    boroughs: ['Brooklyn', 'Queens', 'Manhattan'],
-    window: { from: '2025-10-01', to: '2026-08-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'Pretty Little Liars: Summer School',
-    type: 'series',
-    boroughs: ['Brooklyn', 'Manhattan'],
-    window: { from: '2025-08-01', to: '2026-03-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'Saturday Night Live',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-09-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Variety', 'Live Show']
-  },
-  {
-    title: 'The Tonight Show Starring Jimmy Fallon',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['Talk Show', 'Variety']
-  },
-  {
-    title: 'Late Show with Stephen Colbert',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['Talk Show']
-  },
-  {
-    title: 'Late Night with Seth Meyers',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['Talk Show']
-  },
-  {
-    title: 'The Daily Show',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['Talk Show']
-  },
-  {
-    title: 'Last Week Tonight with John Oliver',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-02-01', to: '2026-11-30' },
-    categories: ['Television'],
-    subcategories: ['Talk Show', 'Cable']
-  },
-  {
-    title: 'The View',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['Talk Show']
-  },
-  {
-    title: 'Good Morning America',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['News']
-  },
-  {
-    title: 'Today',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['News']
-  },
-  {
-    title: 'CBS Mornings',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-01-01', to: '2026-12-31' },
-    categories: ['Television'],
-    subcategories: ['News']
-  },
-  {
-    title: 'The Real Housewives of New York City',
-    type: 'series',
-    boroughs: ['Manhattan', 'Brooklyn'],
-    window: { from: '2025-06-01', to: '2026-06-30' },
-    categories: ['Television'],
-    subcategories: ['Reality', 'Cable']
-  },
-  {
-    title: 'Project Runway',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-08-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Reality', 'Cable']
-  },
-  {
-    title: 'Top Chef',
-    type: 'series',
-    boroughs: ['Manhattan', 'Brooklyn'],
-    window: { from: '2025-08-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Reality', 'Cable']
-  },
-  {
-    title: 'Sesame Street',
-    type: 'series',
-    boroughs: ['Queens'],
-    window: { from: '2025-07-01', to: '2026-05-31' },
-    categories: ['Television'],
-    subcategories: ['Episodic series', 'Cable']
-  },
-  {
-    title: 'Brilliant Minds',
-    type: 'series',
-    boroughs: ['Manhattan', 'Brooklyn'],
-    window: { from: '2025-07-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'High Potential (NY block)',
-    type: 'series',
-    boroughs: ['Manhattan'],
-    window: { from: '2025-08-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  },
-  {
-    title: 'Watson',
-    type: 'series',
-    boroughs: ['Manhattan', 'Brooklyn'],
-    window: { from: '2025-08-01', to: '2026-04-30' },
-    categories: ['Television'],
-    subcategories: ['Episodic series']
-  }
-]
 
 export type ProductionGuess = {
   title: string
   type: ProductionType
   confidence: 'high' | 'medium' | 'low'
-  /** Other titles that also satisfy the minimum match. */
+  imdbId: string | null
+  /** Other titles that scored equally. */
   alternates: string[]
 }
 
 type PermitLike = {
-  borough?: string
   category?: string
   subcategoryname?: string
   startdatetime?: string
 }
 
-export const guessProduction = (permit: PermitLike): ProductionGuess | null => {
+export const imdbUrl = (guess: { imdbId: string | null; title: string }): string =>
+  guess.imdbId
+    ? `https://www.imdb.com/title/${guess.imdbId}/`
+    : `https://www.imdb.com/find?q=${encodeURIComponent(guess.title)}&s=tt`
+
+export const guessProduction = (
+  permit: PermitLike,
+  productions: Production[]
+): ProductionGuess | null => {
+  if (!productions.length) return null
+  if (permit.category !== 'Television') return null
+
   const date = permit.startdatetime ? new Date(permit.startdatetime).getTime() : NaN
   const sub = (permit.subcategoryname || '').toLowerCase()
+  if (!sub) return null
 
-  type Scored = { prod: KnownProduction; score: number; hits: number }
+  type Scored = { prod: Production; score: number }
   const scored: Scored[] = []
 
-  for (const prod of knownProductions) {
-    let score = 0
-    let hits = 0
+  for (const prod of productions) {
+    if (!prod.subcategories.some((s) => sub.includes(s.toLowerCase()))) continue
 
-    if (prod.categories.length === 0 || (permit.category && prod.categories.includes(permit.category))) {
-      score += 1
-      hits += 1
-    } else if (prod.categories.length > 0) {
-      continue // category mismatch is disqualifying
+    if (!Number.isNaN(date) && prod.premiered) {
+      const from = new Date(prod.premiered).getTime()
+      if (date < from) continue
     }
 
-    if (prod.boroughs.length === 0 || (permit.borough && prod.boroughs.includes(permit.borough))) {
-      score += 2
-      hits += 1
-    } else if (prod.boroughs.length > 0) {
-      continue
-    }
+    let score = 2 // subcategory match is the primary signal
+    if (prod.nycAnchored) score += 2
 
-    if (!Number.isNaN(date)) {
-      const from = new Date(prod.window.from).getTime()
-      const to = new Date(prod.window.to).getTime()
-      if (date >= from && date <= to) {
-        score += 1
-        hits += 1
-      } else {
-        continue // outside window — skip
-      }
-    }
-
-    if (prod.subcategories?.length && sub) {
-      if (prod.subcategories.some((s) => sub.includes(s.toLowerCase()))) {
-        score += 2
-        hits += 1
-      }
-    }
-
-    scored.push({ prod, score, hits })
+    scored.push({ prod, score })
   }
 
-  if (scored.length === 0) return null
   scored.sort((a, b) => b.score - a.score)
   const top = scored[0]
+  if (!top) return null
   const tied = scored.filter((s) => s.score === top.score)
 
-  // Confidence:
-  // - high: subcategory matched and only one candidate
-  // - medium: multiple signals matched
-  // - low: minimum match (borough + date only)
   let confidence: ProductionGuess['confidence'] = 'low'
-  if (top.hits >= 4 && tied.length === 1) confidence = 'high'
-  else if (top.hits >= 3) confidence = 'medium'
+  if (top.prod.nycAnchored && tied.length === 1) confidence = 'high'
+  else if (top.prod.nycAnchored) confidence = 'medium'
+  else if (tied.length <= 2) confidence = 'medium'
 
   return {
     title: top.prod.title,
     type: top.prod.type,
+    imdbId: top.prod.imdbId,
     confidence,
-    alternates: tied.slice(1).map((s) => s.prod.title)
+    alternates: tied.slice(1, 5).map((s) => s.prod.title)
   }
 }
